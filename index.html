@@ -259,6 +259,108 @@
             margin-top: 1rem;
         }
 
+        /* 인건비 복합 입력 스타일 */
+        .labor-compound-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.875rem 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .labor-row-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.625rem;
+        }
+
+        .labor-row-top .cost-label {
+            font-weight: 500;
+        }
+
+        .labor-total {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .labor-input-group {
+            display: flex;
+            align-items: center;
+            gap: 0.625rem;
+        }
+
+        .stepper-wrapper {
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .stepper-btn {
+            width: 34px;
+            height: 36px;
+            border: none;
+            background: transparent;
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+            transition: background 0.15s;
+            user-select: none;
+        }
+
+        .stepper-btn:hover {
+            background: rgba(89, 84, 81, 0.1);
+        }
+
+        .stepper-btn:active {
+            background: rgba(89, 84, 81, 0.18);
+        }
+
+        .stepper-input {
+            width: 36px;
+            height: 36px;
+            text-align: center;
+            border: none;
+            border-left: 1px solid var(--border);
+            border-right: 1px solid var(--border);
+            font-size: 1rem;
+            font-weight: 700;
+            background: white;
+            color: var(--text-primary);
+            -moz-appearance: textfield;
+        }
+
+        .stepper-input::-webkit-outer-spin-button,
+        .stepper-input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .stepper-input:focus {
+            outline: none;
+            background: #fafafa;
+        }
+
+        .labor-multiply {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        .labor-equals {
+            display: none;
+        }
+
         @media (max-width: 1024px) {
             .two-column-grid {
                 grid-template-columns: 1fr;
@@ -323,6 +425,35 @@
 
             .total-amount {
                 font-size: 1.5rem;
+            }
+
+            .labor-compound-item {
+                padding: 0.75rem;
+            }
+
+            .labor-total {
+                font-size: 0.9rem;
+            }
+
+            .labor-input-group {
+                gap: 0.4rem;
+            }
+
+            .stepper-btn {
+                width: 30px;
+                height: 32px;
+            }
+
+            .stepper-input {
+                width: 32px;
+                height: 32px;
+                font-size: 0.9rem;
+            }
+
+            .labor-compound-item .cost-input {
+                width: auto;
+                min-width: 0;
+                flex: 1;
             }
         }
 
@@ -500,6 +631,55 @@
                 font-weight: 600;
                 color: white !important;
                 opacity: 0.9;
+            }
+
+            .stepper-btn {
+                display: none;
+            }
+
+            .stepper-wrapper {
+                border: none;
+                background: transparent;
+            }
+
+            .stepper-input {
+                border: none;
+                background: transparent;
+                font-size: 0.7rem;
+                width: 18px;
+                height: auto;
+                padding: 0;
+                font-weight: 600;
+            }
+
+            .labor-compound-item {
+                background: transparent;
+                border: none;
+                padding: 3px 4px;
+                margin-bottom: 3px;
+            }
+
+            .labor-row-top {
+                margin-bottom: 1px;
+            }
+
+            .labor-row-top .cost-label {
+                font-weight: 400;
+            }
+
+            .labor-input-group {
+                gap: 0.2rem;
+            }
+
+            .labor-multiply {
+                font-size: 0.65rem;
+                color: #888;
+            }
+
+            .labor-total {
+                font-size: 0.7rem;
+                color: #888;
+                font-weight: 500;
             }
 
             .footer {
@@ -777,32 +957,76 @@
                     <span class="category-title">👥 인건비</span>
                     <span class="category-subtotal" id="labor-subtotal">46,000,000원</span>
                 </div>
-                <div class="cost-item">
-                    <label class="cost-label">직원 6명(350만원 기준)</label>
-                    <div class="cost-input-wrapper">
-                        <input
-                            type="text"
-                            class="cost-input"
-                            data-category="operating"
-                            data-section="labor"
-                            data-field="staff"
-                            value="21,000,000"
-                        >
-                        <span class="cost-unit">원</span>
+                <div class="labor-compound-item">
+                    <div class="labor-row-top">
+                        <label class="cost-label">직원 인건비</label>
+                        <span class="labor-total" id="labor-staff-total">21,000,000원</span>
+                    </div>
+                    <div class="labor-input-group">
+                        <div class="cost-input-wrapper">
+                            <span class="cost-unit">인당</span>
+                            <input
+                                type="text"
+                                class="cost-input"
+                                data-category="operating"
+                                data-section="labor"
+                                data-field="staffUnitCost"
+                                data-input-type="currency"
+                                value="3,500,000"
+                            >
+                            <span class="cost-unit">원</span>
+                        </div>
+                        <span class="labor-multiply">&times;</span>
+                        <div class="stepper-wrapper">
+                            <button type="button" class="stepper-btn" data-target="staffCount" data-action="decrease">&minus;</button>
+                            <input
+                                type="text"
+                                class="stepper-input"
+                                data-category="operating"
+                                data-section="labor"
+                                data-field="staffCount"
+                                data-input-type="count"
+                                value="6"
+                            >
+                            <button type="button" class="stepper-btn" data-target="staffCount" data-action="increase">&plus;</button>
+                        </div>
+                        <span class="labor-multiply">명</span>
                     </div>
                 </div>
-                <div class="cost-item">
-                    <label class="cost-label">원장 인건비</label>
-                    <div class="cost-input-wrapper">
-                        <input
-                            type="text"
-                            class="cost-input"
-                            data-category="operating"
-                            data-section="labor"
-                            data-field="director"
-                            value="31,000,000"
-                        >
-                        <span class="cost-unit">원</span>
+                <div class="labor-compound-item">
+                    <div class="labor-row-top">
+                        <label class="cost-label">원장 인건비</label>
+                        <span class="labor-total" id="labor-director-total">31,000,000원</span>
+                    </div>
+                    <div class="labor-input-group">
+                        <div class="cost-input-wrapper">
+                            <span class="cost-unit">인당</span>
+                            <input
+                                type="text"
+                                class="cost-input"
+                                data-category="operating"
+                                data-section="labor"
+                                data-field="directorUnitCost"
+                                data-input-type="currency"
+                                value="31,000,000"
+                            >
+                            <span class="cost-unit">원</span>
+                        </div>
+                        <span class="labor-multiply">&times;</span>
+                        <div class="stepper-wrapper">
+                            <button type="button" class="stepper-btn" data-target="directorCount" data-action="decrease">&minus;</button>
+                            <input
+                                type="text"
+                                class="stepper-input"
+                                data-category="operating"
+                                data-section="labor"
+                                data-field="directorCount"
+                                data-input-type="count"
+                                value="1"
+                            >
+                            <button type="button" class="stepper-btn" data-target="directorCount" data-action="increase">&plus;</button>
+                        </div>
+                        <span class="labor-multiply">명</span>
                     </div>
                 </div>
             </div>
@@ -966,8 +1190,10 @@
             },
             operating: {
                 labor: {
-                    staff: 21000000,
-                    director: 31000000
+                    staffCount: 6,
+                    staffUnitCost: 3500000,
+                    directorCount: 1,
+                    directorUnitCost: 31000000
                 },
                 fixed: {
                     rent: 11000000,
@@ -1043,13 +1269,17 @@
         function calculateOperatingCosts() {
             const data = currentData.operating;
 
-            const laborTotal = Object.values(data.labor).reduce((sum, val) => sum + val, 0);
+            const staffTotal = data.labor.staffCount * data.labor.staffUnitCost;
+            const directorTotal = data.labor.directorCount * data.labor.directorUnitCost;
+            const laborTotal = staffTotal + directorTotal;
             const fixedTotal = Object.values(data.fixed).reduce((sum, val) => sum + val, 0);
             const variableTotal = Object.values(data.variable).reduce((sum, val) => sum + val, 0);
 
             const operatingTotal = laborTotal + fixedTotal + variableTotal;
 
             return {
+                staffTotal,
+                directorTotal,
                 laborTotal,
                 fixedTotal,
                 variableTotal,
@@ -1070,6 +1300,8 @@
 
             // 운영 비용 업데이트
             const operating = calculateOperatingCosts();
+            document.getElementById('labor-staff-total').textContent = formatCurrency(operating.staffTotal) + '원';
+            document.getElementById('labor-director-total').textContent = formatCurrency(operating.directorTotal) + '원';
             document.getElementById('labor-subtotal').textContent = formatCurrency(operating.laborTotal) + '원';
             document.getElementById('fixed-subtotal').textContent = formatCurrency(operating.fixedTotal) + '원';
             document.getElementById('variable-subtotal').textContent = formatCurrency(operating.variableTotal) + '원';
@@ -1087,8 +1319,15 @@
             const category = input.dataset.category;
             const section = input.dataset.section;
             const field = input.dataset.field;
+            const inputType = input.dataset.inputType;
 
-            const value = parseFormattedNumber(input.value);
+            let value;
+            if (inputType === 'count') {
+                value = parseInt(input.value) || 0;
+                if (value < 0) value = 0;
+            } else {
+                value = parseFormattedNumber(input.value);
+            }
             currentData[category][section][field] = value;
 
             // 디바운싱
@@ -1100,19 +1339,16 @@
 
         // 모든 입력 필드에 이벤트 리스너 추가
         function initializeEventListeners() {
-            const inputs = document.querySelectorAll('.cost-input');
-
-            inputs.forEach(input => {
-                // 입력 시 실시간 포맷팅
+            // 통화 입력 필드
+            const costInputs = document.querySelectorAll('.cost-input');
+            costInputs.forEach(input => {
                 input.addEventListener('input', (e) => {
                     const cursorPosition = e.target.selectionStart;
                     const oldLength = e.target.value.length;
-                    const oldValue = e.target.value;
 
                     const value = parseFormattedNumber(e.target.value);
                     e.target.value = formatCurrency(value);
 
-                    // 커서 위치 조정
                     const newLength = e.target.value.length;
                     const newPosition = cursorPosition + (newLength - oldLength);
                     e.target.setSelectionRange(newPosition, newPosition);
@@ -1120,15 +1356,56 @@
                     handleInputChange(e);
                 });
 
-                // 포커스 시 전체 선택
                 input.addEventListener('focus', (e) => {
                     e.target.select();
                 });
 
-                // 블러 시 포맷 확인
                 input.addEventListener('blur', (e) => {
                     const value = parseFormattedNumber(e.target.value);
                     e.target.value = formatCurrency(value);
+                });
+            });
+
+            // Stepper 인원수 입력 필드
+            const stepperInputs = document.querySelectorAll('.stepper-input');
+            stepperInputs.forEach(input => {
+                input.addEventListener('input', (e) => {
+                    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+                    handleInputChange(e);
+                });
+
+                input.addEventListener('focus', (e) => {
+                    e.target.select();
+                });
+
+                input.addEventListener('blur', (e) => {
+                    let value = parseInt(e.target.value) || 0;
+                    if (value < 0) value = 0;
+                    e.target.value = value;
+                });
+            });
+
+            // Stepper +/- 버튼
+            const stepperBtns = document.querySelectorAll('.stepper-btn');
+            stepperBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetField = btn.dataset.target;
+                    const action = btn.dataset.action;
+                    let currentValue = currentData.operating.labor[targetField];
+
+                    if (action === 'increase') {
+                        currentValue++;
+                    } else if (action === 'decrease' && currentValue > 0) {
+                        currentValue--;
+                    }
+
+                    currentData.operating.labor[targetField] = currentValue;
+
+                    // 해당 input 필드 업데이트
+                    const input = document.querySelector(`.stepper-input[data-field="${targetField}"]`);
+                    if (input) input.value = currentValue;
+
+                    updateAllTotals();
                 });
             });
         }
@@ -1148,6 +1425,23 @@
                 const saved = localStorage.getItem('costCalculatorData');
                 if (saved) {
                     currentData = JSON.parse(saved);
+
+                    // 구 데이터 마이그레이션: labor.staff/director → staffCount/staffUnitCost 형태로 변환
+                    if (currentData.operating && currentData.operating.labor) {
+                        const labor = currentData.operating.labor;
+                        if ('staff' in labor && !('staffCount' in labor)) {
+                            const unitCost = 3500000;
+                            labor.staffCount = Math.round(labor.staff / unitCost) || 1;
+                            labor.staffUnitCost = unitCost;
+                            delete labor.staff;
+                        }
+                        if ('director' in labor && !('directorCount' in labor)) {
+                            labor.directorCount = 1;
+                            labor.directorUnitCost = labor.director;
+                            delete labor.director;
+                        }
+                    }
+
                     loadDataToInputs();
                     updateAllTotals();
                 }
@@ -1158,14 +1452,24 @@
 
         // 데이터를 입력 필드에 로드
         function loadDataToInputs() {
-            const inputs = document.querySelectorAll('.cost-input');
-            inputs.forEach(input => {
+            const costInputs = document.querySelectorAll('.cost-input');
+            costInputs.forEach(input => {
                 const category = input.dataset.category;
                 const section = input.dataset.section;
                 const field = input.dataset.field;
 
                 const value = currentData[category][section][field];
                 input.value = formatCurrency(value);
+            });
+
+            const stepperInputs = document.querySelectorAll('.stepper-input');
+            stepperInputs.forEach(input => {
+                const category = input.dataset.category;
+                const section = input.dataset.section;
+                const field = input.dataset.field;
+
+                const value = currentData[category][section][field];
+                input.value = value;
             });
         }
 
