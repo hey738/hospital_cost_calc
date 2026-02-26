@@ -361,6 +361,24 @@
             display: none;
         }
 
+        .specialty-select {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--primary);
+            background: white;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .specialty-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(89, 84, 81, 0.1);
+        }
+
         @media (max-width: 1024px) {
             .two-column-grid {
                 grid-template-columns: 1fr;
@@ -512,6 +530,10 @@
             }
 
             .header-buttons {
+                display: none;
+            }
+
+            .specialty-select {
                 display: none;
             }
 
@@ -715,10 +737,14 @@
         <div class="header-content">
             <img src="https://lh3.googleusercontent.com/d/11dWXq7rFxA13yLeNxgc7qkD1En8uXhvS" alt="HorangPharm Logo" class="logo-img" onclick="scrollToTop()" onerror="this.style.display='none'">
             <div class="header-titles">
-                <h1 class="main-title">예상 개원비용 및 운영비용 안내</h1>
+                <h1 class="main-title">예상 개원비용 및 운영비용 안내<span class="specialty-name"></span></h1>
                 <p class="sub-title">실제 평균 비용을 기반으로 한 예시입니다.</p>
             </div>
             <div class="header-buttons">
+                <select id="specialty-select" class="specialty-select" onchange="selectSpecialty(this.value)">
+                    <option value="내과">내과</option>
+                    <option value="이비인후과">이비인후과</option>
+                </select>
                 <button class="pdf-button" onclick="downloadPDF()">
                     PDF로 저장
                 </button>
@@ -730,7 +756,7 @@
     </header>
 
     <div class="container">
-        <h1 class="main-title">예상 개원비용 및 운영비용 안내</h1>
+        <h1 class="main-title">예상 개원비용 및 운영비용 안내<span class="specialty-name"></span></h1>
         <p class="sub-title">실제 평균 비용을 기반으로 한 예시입니다.</p>
 
         <!-- 2열 그리드 레이아웃 -->
@@ -776,7 +802,7 @@
             </div>
 
             <!-- 의료장비 -->
-            <div class="category-section">
+            <div class="category-section" id="equipment-section">
                 <div class="category-header">
                     <span class="category-title">🏥 의료장비</span>
                     <span class="category-subtotal" id="equipment-subtotal">295,000,000원</span>
@@ -1164,51 +1190,53 @@
     </div>
 
     <script>
-        // 기본 데이터
-        const defaultData = {
-            opening: {
-                realEstate: {
-                    deposit: 100000000,
-                    interior: 330000000
-                },
+        // 진료과별 장비 설정
+        const specialtyConfig = {
+            '내과': {
                 equipment: {
-                    xray: 25000000,
-                    mammography: 60000000,
-                    endoscopy: 150000000,
-                    ultrasound: 55000000,
-                    pap: 5000000
-                },
-                supplies: {
-                    medical: 20000000,
-                    medicine: 10000000,
-                    etc: 20000000,
-                    furniture: 20000000
-                },
-                reserve: {
-                    amount: 100000000
+                    fields: { xray: 25000000, mammography: 60000000, endoscopy: 150000000, ultrasound: 55000000, pap: 5000000 },
+                    labels: { xray: '엑스레이', mammography: '맘모', endoscopy: '내시경', ultrasound: '초음파', pap: '팝' }
                 }
             },
-            operating: {
-                labor: {
-                    staffCount: 6,
-                    staffUnitCost: 3500000,
-                    directorCount: 1,
-                    directorUnitCost: 31000000
-                },
-                fixed: {
-                    rent: 11000000,
-                    management: 2000000,
-                    interest: 3500000
-                },
-                variable: {
-                    supplies: 5000000,
-                    commission: 10000000,
-                    tax: 3000000,
-                    program: 1000000
+            '이비인후과': {
+                equipment: {
+                    fields: { ent_unit: 30000000, endoscope: 35000000, audiometry: 25000000, microscope: 40000000, xray: 25000000, nebulizer: 5000000 },
+                    labels: { ent_unit: 'ENT 유니트', endoscope: '내시경 시스템', audiometry: '청력검사장비(방음부스 포함)', microscope: '수술현미경', xray: '엑스레이', nebulizer: '네블라이저' }
                 }
             }
         };
 
+        // 공통 기본 데이터 (장비 제외)
+        const commonDefaults = {
+            opening: {
+                realEstate: { deposit: 100000000, interior: 330000000 },
+                supplies: { medical: 20000000, medicine: 10000000, etc: 20000000, furniture: 20000000 },
+                reserve: { amount: 100000000 }
+            },
+            operating: {
+                labor: { staffCount: 6, staffUnitCost: 3500000, directorCount: 1, directorUnitCost: 31000000 },
+                fixed: { rent: 11000000, management: 2000000, interest: 3500000 },
+                variable: { supplies: 5000000, commission: 10000000, tax: 3000000, program: 1000000 }
+            }
+        };
+
+        let currentSpecialty = '내과';
+
+        // 진료과별 기본 데이터 생성
+        function buildDefaultData(specialty) {
+            const config = specialtyConfig[specialty];
+            return {
+                opening: {
+                    realEstate: JSON.parse(JSON.stringify(commonDefaults.opening.realEstate)),
+                    equipment: JSON.parse(JSON.stringify(config.equipment.fields)),
+                    supplies: JSON.parse(JSON.stringify(commonDefaults.opening.supplies)),
+                    reserve: JSON.parse(JSON.stringify(commonDefaults.opening.reserve))
+                },
+                operating: JSON.parse(JSON.stringify(commonDefaults.operating))
+            };
+        }
+
+        let defaultData = buildDefaultData(currentSpecialty);
         let currentData = JSON.parse(JSON.stringify(defaultData));
 
         // 유틸리티 함수: 숫자를 천단위 콤마 포맷으로 변환
@@ -1245,6 +1273,35 @@
             return result;
         }
 
+        // 의료장비 HTML 동적 생성
+        function buildEquipmentHTML(specialty) {
+            const config = specialtyConfig[specialty];
+            let html = `<div class="category-header">
+                <span class="category-title">🏥 의료장비</span>
+                <span class="category-subtotal" id="equipment-subtotal">0원</span>
+            </div>`;
+            for (const [field, defaultValue] of Object.entries(config.equipment.fields)) {
+                const label = config.equipment.labels[field];
+                const value = currentData.opening.equipment[field] !== undefined
+                    ? currentData.opening.equipment[field] : defaultValue;
+                html += `<div class="cost-item">
+                <label class="cost-label">${label}</label>
+                <div class="cost-input-wrapper">
+                    <input type="text" class="cost-input" data-category="opening" data-section="equipment" data-field="${field}" value="${formatCurrency(value)}">
+                    <span class="cost-unit">원</span>
+                </div>
+            </div>`;
+            }
+            return html;
+        }
+
+        // 진료과명 타이틀 업데이트
+        function updateSpecialtyTitle() {
+            document.querySelectorAll('.specialty-name').forEach(el => {
+                el.textContent = ' - ' + currentSpecialty;
+            });
+        }
+
         // 개원 비용 계산
         function calculateOpeningCosts() {
             const data = currentData.opening;
@@ -1256,13 +1313,7 @@
 
             const openingTotal = realEstateTotal + equipmentTotal + suppliesTotal + reserveTotal;
 
-            return {
-                realEstateTotal,
-                equipmentTotal,
-                suppliesTotal,
-                reserveTotal,
-                openingTotal
-            };
+            return { realEstateTotal, equipmentTotal, suppliesTotal, reserveTotal, openingTotal };
         }
 
         // 운영 비용 계산
@@ -1277,19 +1328,11 @@
 
             const operatingTotal = laborTotal + fixedTotal + variableTotal;
 
-            return {
-                staffTotal,
-                directorTotal,
-                laborTotal,
-                fixedTotal,
-                variableTotal,
-                operatingTotal
-            };
+            return { staffTotal, directorTotal, laborTotal, fixedTotal, variableTotal, operatingTotal };
         }
 
         // UI 업데이트
         function updateAllTotals() {
-            // 개원 비용 업데이트
             const opening = calculateOpeningCosts();
             document.getElementById('realEstate-subtotal').textContent = formatCurrency(opening.realEstateTotal) + '원';
             document.getElementById('equipment-subtotal').textContent = formatCurrency(opening.equipmentTotal) + '원';
@@ -1298,7 +1341,6 @@
             document.getElementById('opening-total').textContent = formatCurrency(opening.openingTotal) + '원';
             document.getElementById('opening-total-korean').textContent = formatKoreanCurrency(opening.openingTotal);
 
-            // 운영 비용 업데이트
             const operating = calculateOperatingCosts();
             document.getElementById('labor-staff-total').textContent = formatCurrency(operating.staffTotal) + '원';
             document.getElementById('labor-director-total').textContent = formatCurrency(operating.directorTotal) + '원';
@@ -1308,7 +1350,6 @@
             document.getElementById('operating-total').textContent = formatCurrency(operating.operatingTotal) + '원';
             document.getElementById('operating-total-korean').textContent = formatKoreanCurrency(operating.operatingTotal);
 
-            // localStorage에 저장
             saveToLocalStorage();
         }
 
@@ -1330,90 +1371,75 @@
             }
             currentData[category][section][field] = value;
 
-            // 디바운싱
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 updateAllTotals();
             }, 300);
         }
 
-        // 모든 입력 필드에 이벤트 리스너 추가
+        // 이벤트 위임 방식으로 리스너 초기화 (한번만 호출)
         function initializeEventListeners() {
-            // 통화 입력 필드
-            const costInputs = document.querySelectorAll('.cost-input');
-            costInputs.forEach(input => {
-                input.addEventListener('input', (e) => {
+            const body = document.body;
+
+            body.addEventListener('input', (e) => {
+                if (e.target.classList.contains('cost-input')) {
                     const cursorPosition = e.target.selectionStart;
                     const oldLength = e.target.value.length;
-
                     const value = parseFormattedNumber(e.target.value);
                     e.target.value = formatCurrency(value);
-
                     const newLength = e.target.value.length;
                     const newPosition = cursorPosition + (newLength - oldLength);
                     e.target.setSelectionRange(newPosition, newPosition);
-
                     handleInputChange(e);
-                });
-
-                input.addEventListener('focus', (e) => {
-                    e.target.select();
-                });
-
-                input.addEventListener('blur', (e) => {
-                    const value = parseFormattedNumber(e.target.value);
-                    e.target.value = formatCurrency(value);
-                });
-            });
-
-            // Stepper 인원수 입력 필드
-            const stepperInputs = document.querySelectorAll('.stepper-input');
-            stepperInputs.forEach(input => {
-                input.addEventListener('input', (e) => {
+                } else if (e.target.classList.contains('stepper-input')) {
                     e.target.value = e.target.value.replace(/[^0-9]/g, '');
                     handleInputChange(e);
-                });
+                }
+            });
 
-                input.addEventListener('focus', (e) => {
+            body.addEventListener('focusin', (e) => {
+                if (e.target.classList.contains('cost-input') || e.target.classList.contains('stepper-input')) {
                     e.target.select();
-                });
+                }
+            });
 
-                input.addEventListener('blur', (e) => {
+            body.addEventListener('focusout', (e) => {
+                if (e.target.classList.contains('cost-input')) {
+                    const value = parseFormattedNumber(e.target.value);
+                    e.target.value = formatCurrency(value);
+                } else if (e.target.classList.contains('stepper-input')) {
                     let value = parseInt(e.target.value) || 0;
                     if (value < 0) value = 0;
                     e.target.value = value;
-                });
+                }
             });
 
-            // Stepper +/- 버튼
-            const stepperBtns = document.querySelectorAll('.stepper-btn');
-            stepperBtns.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const targetField = btn.dataset.target;
-                    const action = btn.dataset.action;
-                    let currentValue = currentData.operating.labor[targetField];
+            body.addEventListener('click', (e) => {
+                const btn = e.target.closest('.stepper-btn');
+                if (!btn) return;
+                const targetField = btn.dataset.target;
+                const action = btn.dataset.action;
+                let currentValue = currentData.operating.labor[targetField];
 
-                    if (action === 'increase') {
-                        currentValue++;
-                    } else if (action === 'decrease' && currentValue > 0) {
-                        currentValue--;
-                    }
+                if (action === 'increase') {
+                    currentValue++;
+                } else if (action === 'decrease' && currentValue > 0) {
+                    currentValue--;
+                }
 
-                    currentData.operating.labor[targetField] = currentValue;
+                currentData.operating.labor[targetField] = currentValue;
 
-                    // 해당 input 필드 업데이트
-                    const input = document.querySelector(`.stepper-input[data-field="${targetField}"]`);
-                    if (input) input.value = currentValue;
+                const input = document.querySelector(`.stepper-input[data-field="${targetField}"]`);
+                if (input) input.value = currentValue;
 
-                    updateAllTotals();
-                });
+                updateAllTotals();
             });
         }
 
-        // localStorage 저장
+        // localStorage 저장 (진료과별)
         function saveToLocalStorage() {
             try {
-                localStorage.setItem('costCalculatorData', JSON.stringify(currentData));
+                localStorage.setItem('costCalculatorData_' + currentSpecialty, JSON.stringify(currentData));
             } catch (e) {
                 console.error('localStorage 저장 실패:', e);
             }
@@ -1422,11 +1448,19 @@
         // localStorage 불러오기
         function loadFromLocalStorage() {
             try {
-                const saved = localStorage.getItem('costCalculatorData');
+                // 구 데이터 마이그레이션: 기존 키를 내과용으로 이전
+                const oldSaved = localStorage.getItem('costCalculatorData');
+                if (oldSaved) {
+                    localStorage.setItem('costCalculatorData_내과', oldSaved);
+                    localStorage.removeItem('costCalculatorData');
+                }
+
+                const key = 'costCalculatorData_' + currentSpecialty;
+                const saved = localStorage.getItem(key);
                 if (saved) {
                     currentData = JSON.parse(saved);
 
-                    // 구 데이터 마이그레이션: labor.staff/director → staffCount/staffUnitCost 형태로 변환
+                    // 구 데이터 마이그레이션: labor.staff/director → staffCount/staffUnitCost
                     if (currentData.operating && currentData.operating.labor) {
                         const labor = currentData.operating.labor;
                         if ('staff' in labor && !('staffCount' in labor)) {
@@ -1441,9 +1475,6 @@
                             delete labor.director;
                         }
                     }
-
-                    loadDataToInputs();
-                    updateAllTotals();
                 }
             } catch (e) {
                 console.error('localStorage 불러오기 실패:', e);
@@ -1458,8 +1489,9 @@
                 const section = input.dataset.section;
                 const field = input.dataset.field;
 
-                const value = currentData[category][section][field];
-                input.value = formatCurrency(value);
+                if (currentData[category] && currentData[category][section] && currentData[category][section][field] !== undefined) {
+                    input.value = formatCurrency(currentData[category][section][field]);
+                }
             });
 
             const stepperInputs = document.querySelectorAll('.stepper-input');
@@ -1468,15 +1500,57 @@
                 const section = input.dataset.section;
                 const field = input.dataset.field;
 
-                const value = currentData[category][section][field];
-                input.value = value;
+                if (currentData[category] && currentData[category][section] && currentData[category][section][field] !== undefined) {
+                    input.value = currentData[category][section][field];
+                }
             });
+        }
+
+        // 진료과 전환
+        function selectSpecialty(specialty) {
+            if (!specialtyConfig[specialty] || specialty === currentSpecialty) return;
+
+            // 현재 데이터 저장
+            saveToLocalStorage();
+
+            // 진료과 전환
+            currentSpecialty = specialty;
+            localStorage.setItem('selectedSpecialty', specialty);
+
+            // 기본값 재구성
+            defaultData = buildDefaultData(specialty);
+
+            // 저장된 데이터 로드 또는 기본값 사용
+            try {
+                const saved = localStorage.getItem('costCalculatorData_' + specialty);
+                if (saved) {
+                    currentData = JSON.parse(saved);
+                } else {
+                    currentData = JSON.parse(JSON.stringify(defaultData));
+                }
+            } catch (e) {
+                currentData = JSON.parse(JSON.stringify(defaultData));
+            }
+
+            // 장비 HTML 교체
+            document.getElementById('equipment-section').innerHTML = buildEquipmentHTML(specialty);
+
+            // UI 업데이트
+            loadDataToInputs();
+            updateAllTotals();
+            updateSpecialtyTitle();
+
+            // 드롭다운 동기화
+            const select = document.getElementById('specialty-select');
+            if (select) select.value = specialty;
         }
 
         // 기본값으로 초기화
         function resetToDefault() {
             if (confirm('모든 값을 기본값으로 초기화하시겠습니까?')) {
+                defaultData = buildDefaultData(currentSpecialty);
                 currentData = JSON.parse(JSON.stringify(defaultData));
+                document.getElementById('equipment-section').innerHTML = buildEquipmentHTML(currentSpecialty);
                 loadDataToInputs();
                 updateAllTotals();
             }
@@ -1484,10 +1558,7 @@
 
         // 최상단으로 스크롤
         function scrollToTop() {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         // PDF로 저장
@@ -1497,9 +1568,33 @@
 
         // 초기화
         function initialize() {
+            // 저장된 진료과 로드
+            const savedSpecialty = localStorage.getItem('selectedSpecialty');
+            if (savedSpecialty && specialtyConfig[savedSpecialty]) {
+                currentSpecialty = savedSpecialty;
+            }
+
+            // 드롭다운 설정
+            const select = document.getElementById('specialty-select');
+            if (select) select.value = currentSpecialty;
+
+            // 기본값 구성
+            defaultData = buildDefaultData(currentSpecialty);
+            currentData = JSON.parse(JSON.stringify(defaultData));
+
+            // 저장된 데이터 로드
             loadFromLocalStorage();
+
+            // 장비 HTML 생성 (로드된 데이터 기반)
+            document.getElementById('equipment-section').innerHTML = buildEquipmentHTML(currentSpecialty);
+
+            // 이벤트 리스너 (위임 방식, 한번만)
             initializeEventListeners();
+
+            // UI 동기화
+            loadDataToInputs();
             updateAllTotals();
+            updateSpecialtyTitle();
         }
 
         // 페이지 로드 시 초기화
